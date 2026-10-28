@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCSS v9 — Self-Assessment Tool</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Third-party libraries are vendored (see vendor/licenses) so the tool works offline and makes no external requests -->
+  <script src="vendor/chart.umd.min.js"></script>
+  <script src="vendor/jspdf.umd.min.js"></script>
+  <script src="vendor/jspdf.plugin.autotable.min.js"></script>
+  <script src="vendor/xlsx.full.min.js" defer></script>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
+<button class="lang-toggle" id="langToggle" onclick="toggleLang()">EN</button>
+
+<!-- ── WELCOME ───────────────────────────────── -->
+<div id="welcome">
+  <div class="welcome-logo">
+    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="48" rx="8" fill="#2f6fde"/>
+      <path d="M14 24l6 6 14-14" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>CCSS v9.0</span>
+  </div>
+
+  <h1 class="welcome-title">
+    CryptoCurrency Security<br>
+    <span>Self-Assessment Tool</span>
+  </h1>
+  <p class="welcome-sub" data-i18n="welcomeSub">
+    Evalúa el nivel de cumplimiento de tu organización con el estándar CCSS v9.0
+    publicado por el CryptoCurrency Certification Consortium (C4).
+  </p>
+
+  <div class="level-cards">
+    <div class="level-card" data-level="I" onclick="selectLevel('I')">
+      <div class="level-badge I">I</div>
+      <h3 data-i18n="level1Name">Nivel I — Fundacional</h3>
+      <p data-i18n="level1Desc">Controles básicos de seguridad para gestión de activos criptográficos.</p>
+    </div>
+    <div class="level-card" data-level="II" onclick="selectLevel('II')">
+      <div class="level-badge II">II</div>
+      <h3 data-i18n="level2Name">Nivel II — Avanzado</h3>
+      <p data-i18n="level2Desc">Controles adicionales con mayor rigor operativo y documentación.</p>
+    </div>
+    <div class="level-card" data-level="III" onclick="selectLevel('III')">
+      <div class="level-badge III">III</div>
+      <h3 data-i18n="level3Name">Nivel III — Experto</h3>
+      <p data-i18n="level3Desc">Máximo nivel de seguridad para entidades con operaciones de alto valor.</p>
+    </div>
+  </div>
+
+  <div class="welcome-setup">
+    <label class="field">
+      <span data-i18n="orgNameLabel">Organización (opcional)</span>
+      <input type="text" id="orgName" maxlength="120" data-i18n-placeholder="orgNamePh">
+    </label>
+    <div class="welcome-modules">
+      <span class="field-label" data-i18n="modulesLabel">Módulos opcionales</span>
+      <label class="check"><input type="checkbox" id="welcomeOptEvidence"> <span data-i18n="optEvidence">Registrar evidencias por control</span></label>
+      <label class="check"><input type="checkbox" id="welcomeOptRemediation"> <span data-i18n="optRemediation">Plan de remediación</span></label>
+    </div>
+  </div>
+
+  <button class="btn-start" id="btnStart" disabled onclick="startAssessment()" data-i18n="btnStart">
+    Comenzar evaluación →
+  </button>
+  <button class="btn-link" onclick="importAssessment()" data-i18n="btnImport">o importar una evaluación guardada (.json)</button>
+
+  <p class="disclaimer" data-i18n="disclaimer"></p>
+</div>
+
+<!-- ── ASSESSMENT ────────────────────────────── -->
+<div id="assessment" class="hidden">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>CCSS Assessment</h2>
+      <div id="levelTag" class="level-tag"></div>
+    </div>
+    <div class="sidebar-filters" id="sidebarFilters"></div>
+    <div class="sidebar-scroll" id="sidebarScroll"></div>
+    <div class="sidebar-footer">
+      <div class="sidebar-modules">
+        <span class="field-label" data-i18n="modulesTitle">Módulos</span>
+        <label class="check"><input type="checkbox" id="optEvidence" onchange="setOption('evidence', this.checked)"> <span data-i18n="optEvidenceShort">Evidencias</span></label>
+        <label class="check"><input type="checkbox" id="optRemediation" onchange="setOption('remediation', this.checked)"> <span data-i18n="optRemediationShort">Plan de remediación</span></label>
+      </div>
+      <div class="overall-label">
+        <span>Progreso global</span>
+        <span id="progressLabel">0 / 0</span>
+      </div>
+      <div class="overall-progress">
+        <div class="overall-bar" id="overallBar" style="width:0%"></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-crumb" id="topbarCrumb"></div>
+      <div class="topbar-actions">
+        <button class="btn-secondary-sm" onclick="exportJSON()" data-i18n="btnSaveJson">Guardar JSON</button>
+        <button class="btn-report" id="btnReport" onclick="showReport()" disabled>
+          Ver informe →
+        </button>
+      </div>
+    </div>
+    <div class="question-area">
+      <div class="question-card fade-in" id="questionCard"></div>
+    </div>
+  </main>
+</div>
+
+<!-- ── REPORT ────────────────────────────────── -->
+<div id="report" class="hidden"></div>
+
+<!-- Scripts (order matters: config first, then i18n and data, then state, then view modules) -->
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/state.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/analysis.js"></script>
+<script src="js/export.js"></script>
+<script src="js/welcome.js"></script>
+<script src="js/assessment.js"></script>
+<script src="js/report.js"></script>
+<script src="js/pdf.js"></script>
+
+</body>
+</html>
